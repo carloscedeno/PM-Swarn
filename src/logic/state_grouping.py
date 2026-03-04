@@ -2,6 +2,7 @@ import logging
 from typing import Dict, Any
 from src.model.issue import Issue
 from src.logic.work_type_detection import detect_work_type
+from src.jira.evidence import verify_evidence
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,7 @@ def normalize_issue(raw_issue_dict: Dict[str, Any]) -> Issue:
     # Compute work_type
     work_type = detect_work_type(status_name)
     
-    return Issue(
+    issue = Issue(
         id=issue_id,
         key=issue_key,
         summary=summary,
@@ -99,3 +100,8 @@ def normalize_issue(raw_issue_dict: Dict[str, Any]) -> Issue:
         state_group=state_group,
         work_type=work_type
     )
+    
+    # Verify evidence
+    verify_evidence(issue, raw_issue_dict)
+    
+    return issue
