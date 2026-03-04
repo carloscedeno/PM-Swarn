@@ -26,7 +26,7 @@ class JiraClient:
         """Get HTTP basic auth tuple."""
         return (self.email or "", self.api_token or "")
 
-    def execute_jql(self, jql: str, fields: List[str], start_at: int = 0, max_results: int = 50) -> Dict[str, Any]:
+    async def execute_jql(self, jql: str, fields: List[str], start_at: int = 0, max_results: int = 50) -> Dict[str, Any]:
         """
         Execute a JQL query and return the results.
         
@@ -54,8 +54,8 @@ class JiraClient:
         }
         
         try:
-            with httpx.Client(auth=self._get_auth(), timeout=10.0) as client:
-                response = client.post(url, json=payload)
+            async with httpx.AsyncClient(auth=self._get_auth(), timeout=10.0) as client:
+                response = await client.post(url, json=payload)
                 
                 if response.status_code == 200:
                     return response.json()
@@ -75,6 +75,97 @@ class JiraClient:
                 "error_code": "REQUEST_ERROR",
                 "error_message": f"Network error occurred: {str(e)}"
             }
+        except Exception as e:
+            return {
+                "error_code": "INTERNAL_ERROR",
+                "error_message": f"An unexpected error occurred: {str(e)}"
+            }
+
+    async def get_comments(self, issue_key: str) -> Dict[str, Any]:
+        """
+        Get all comments for an issue.
+        
+        Args:
+            issue_key: The issue key (e.g., 'STRATA-1').
+            
+        Returns:
+            A dictionary containing either the comments data or an error.
+        """
+        if not self.base_url:
+            return {
+                "error_code": "CONFIG_ERROR",
+                "error_message": "JIRA_BASE_URL is not configured"
+            }
+
+        url = f"{self.base_url}/rest/api/3/issue/{issue_key}/comment"
+        
+        try:
+            async with httpx.AsyncClient(auth=self._get_auth(), timeout=10.0) as client:
+                response = await client.get(url)
+                
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    return {
+                        "error_code": f"HTTP_{response.status_code}",
+                        "error_message": f"Jira API returned status {response.status_code}: {response.text}"
+                    }
+                    
+        except Exception as e:
+            return {
+                "error_code": "INTERNAL_ERROR",
+                "error_message": f"An unexpected error occurred: {str(e)}"
+            }
+
+    async def add_comment(self, issue_key: str, body: str) -> Dict[str, Any]:
+        """
+        Add a comment to an issue.
+        
+        Args:
+            issue_key: The issue key.
+            body: The comment text.
+            
+        Returns:
+            A dictionary containing either the created comment data or an error.
+        """
+        if not self.base_url:
+            return {
+                "error_code": "CONFIG_ERROR",
+                "error_message": "JIRA_BASE_URL is not configured"
+            }
+
+        url = f"{self.base_url}/rest/api/3/issue/{issue_key}/comment"
+        # Atlassian Document Format (ADF) for Jira V3 API
+        payload = {
+            "body": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "text": body,
+                                "type": "text"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+        
+        try:
+            async with httpx.AsyncClient(auth=self._get_auth(), timeout=10.0) as client:
+                response = await client.post(url, json=payload)
+                
+                if response.status_code == 201:
+                    return response.json()
+                else:
+                    return {
+                        "error_code": f"HTTP_{response.status_code}",
+                        "error_message": f"Jira API returned status {response.status_code}: {response.text}"
+                    }
+                    
         except Exception as e:
             return {
                 "error_code": "INTERNAL_ERROR",

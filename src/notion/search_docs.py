@@ -2,7 +2,7 @@ import os
 from typing import Optional
 from .client import NotionClient
 
-def resolve_notion_doc(issue_key: str, client: NotionClient) -> Optional[str]:
+async def resolve_notion_doc(issue_key: str, client: NotionClient) -> Optional[str]:
     """
     Find the associated document in Notion for a given issue key.
     
@@ -25,12 +25,12 @@ def resolve_notion_doc(issue_key: str, client: NotionClient) -> Optional[str]:
                 }
             }
         }
-        results = client.query_database(database_id, filter_data)
+        results = await client.query_database(database_id, filter_data)
         if results and "results" in results and len(results["results"]) > 0:
             return results["results"][0].get("url")
 
     # Strategy 2: Global search for issue key in title/content
-    search_results = client.search(issue_key)
+    search_results = await client.search(issue_key)
     if search_results and "results" in search_results:
         # Filter for exact or close matches in titles among search results
         for result in search_results["results"]:

@@ -16,4 +16,5 @@ class Issue(BaseModel):
     stories_json_present: Optional[bool] = None
     notion_doc_url: Optional[str] = None
     doc_status: Optional[str] = None
+    compliance_status: Optional[str] = None
     gaps: List[str] = Field(default_factory=list)

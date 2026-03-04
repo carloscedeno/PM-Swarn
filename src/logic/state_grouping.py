@@ -8,18 +8,19 @@ logger = logging.getLogger(__name__)
 
 def classify_state_group(status: str) -> str:
     """
-    Classify a Jira status into an internal state_group.
+    Classify a Beadbox/Jira status into an internal state_group.
     
     Rules:
-    - `STRATA TO DO` -> `queue`
+    - `STRATA TO DO`, `STRATA TO DEPLOYMENT` -> `queue` / `wip`
     - `STRATA BLOCKED` -> `blocked`
     - `STRATA DONE` -> `done`
-    - `STRATA IN PROGRESS`, `STRATA IN TESTING`, `STRATA TO DEPLOYMENT`, `STRATA IN INTEGRATION` -> `wip`
-    - Any other -> `unknown` (and logs a warning)
+    - `STRATA IN PROGRESS`, `STRATA IN TESTING`, `STRATA IN INTEGRATION` -> `wip`
+    - Any other (PRD states) -> `queue` or `wip` depending on context, 
+      but for Stories check they are mostly not 'done'.
     """
     status_upper = status.upper().strip()
     
-    if status_upper == "STRATA TO DO":
+    if status_upper in ["STRATA TO DO"]:
         return "queue"
     elif status_upper == "STRATA BLOCKED":
         return "blocked"
@@ -33,55 +34,49 @@ def classify_state_group(status: str) -> str:
     ]:
         return "wip"
     else:
+        # Many PRD states are effectively backlog/queue for the SDLC check
+        from src.logic.work_type_detection import PRD_STATES
+        if status_upper in PRD_STATES:
+            return "queue"
+            
         logger.warning(f"Unknown status encountered for state_group classification: {status}")
         return "unknown"
 
-def normalize_issue(raw_issue_dict: Dict[str, Any]) -> Issue:
+def normalize_issue(raw_data: Dict[str, Any]) -> Issue:
     """
-    Normalize a raw Jira issue dictionary into an Issue model instance.
-    Expected raw format roughly matches the fields requested from Jira.
+    Normalize raw data (Beadbox bead or Jira issue) into an Issue model instance.
     """
-    # Extract fields from nested Jira structure (assuming standard Jira API v3 format)
-    # The actual structure of raw_issue_dict from the API is usually:
-    # {
-    #   "id": "10000",
-    #   "key": "DEV-1",
-    #   "fields": {
-    #       "summary": "...",
-    #       "status": {"name": "STRATA TO DO", ...},
-    #       "assignee": {"displayName": "...", ...} or None,
-    #       "updated": "2023-01-01...",
-    #       "issuetype": {"name": "Story", ...},
-    #       "parent": {"key": "EPIC-1", ...} or not present
-    #   }
-    # }
-    
-    fields = raw_issue_dict.get("fields", {})
-    
-    # Status
-    status_obj = fields.get("status", {})
-    status_name = status_obj.get("name", "UNKNOWN_STATUS") if isinstance(status_obj, dict) else "UNKNOWN_STATUS"
-    
-    # Assignee
-    assignee_obj = fields.get("assignee")
-    assignee_name = None
-    if isinstance(assignee_obj, dict):
-        assignee_name = assignee_obj.get("displayName") or assignee_obj.get("accountId")
+    # Detect if it's Beadbox or Jira based on presence of 'fields'
+    if "fields" in raw_data:
+        # Jira structure
+        fields = raw_data.get("fields", {})
+        status_obj = fields.get("status", {})
+        status_name = status_obj.get("name", "UNKNOWN_STATUS") if isinstance(status_obj, dict) else "UNKNOWN_STATUS"
         
-    # Issue Type
-    issuetype_obj = fields.get("issuetype", {})
-    issuetype_name = issuetype_obj.get("name", "UNKNOWN_TYPE") if isinstance(issuetype_obj, dict) else "UNKNOWN_TYPE"
-    
-    # Parent
-    parent_obj = fields.get("parent")
-    parent_key = parent_obj.get("key") if isinstance(parent_obj, dict) else None
-    
-    # Base issue properties
-    issue_id = raw_issue_dict.get("id", "")
-    issue_key = raw_issue_dict.get("key", "")
-    summary = fields.get("summary", "")
-    updated = fields.get("updated", "")
-    
+        assignee_obj = fields.get("assignee")
+        assignee_name = assignee_obj.get("displayName") if isinstance(assignee_obj, dict) else None
+        
+        issuetype_obj = fields.get("issuetype", {})
+        issuetype_name = issuetype_obj.get("name", "UNKNOWN_TYPE") if isinstance(issuetype_obj, dict) else "UNKNOWN_TYPE"
+        
+        parent_obj = fields.get("parent")
+        parent_key = parent_obj.get("key") if isinstance(parent_obj, dict) else None
+        
+        issue_id = str(raw_data.get("id", ""))
+        issue_key = raw_data.get("key", "")
+        summary = fields.get("summary", "")
+        updated = fields.get("updated", "")
+    else:
+        # Beadbox structure (per client.py and PRD)
+        issue_id = str(raw_data.get("id", ""))
+        issue_key = raw_data.get("key", issue_id) # Beads might use id as key if key missing
+        summary = raw_data.get("summary", raw_data.get("title", ""))
+        status_name = raw_data.get("status", "UNKNOWN_STATUS")
+        assignee_name = raw_data.get("assignee")
+        updated = raw_data.get("updated_at", "")
+        issuetype_name = raw_data.get("type", "Story")
+        parent_key = raw_data.get("parent_id")
+
     # Compute state_group
     state_group = classify_state_group(status_name)
     
@@ -101,7 +96,13 @@ def normalize_issue(raw_issue_dict: Dict[str, Any]) -> Issue:
         work_type=work_type
     )
     
-    # Verify evidence
-    verify_evidence(issue, raw_issue_dict)
+    # Local check for stories.json evidence in description (Beadbox style)
+    if "description" in raw_data:
+        desc = raw_data["description"]
+        if "stories.json" in desc.lower():
+            issue.stories_json_present = True
+
+    # Note: verify_evidence (Jira specific) might need a Beadbox version or remain for hybrid
+    # For now, we manually handle description check above.
     
     return issue

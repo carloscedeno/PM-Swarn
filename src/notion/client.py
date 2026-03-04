@@ -24,7 +24,7 @@ class NotionClient:
             "Notion-Version": self.version
         }
 
-    def query_database(self, database_id: str, filter_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def query_database(self, database_id: str, filter_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Query a Notion database.
         
@@ -40,8 +40,8 @@ class NotionClient:
 
         url = f"{self.base_url}/databases/{database_id}/query"
         try:
-            with httpx.Client(headers=self._get_headers(), timeout=10.0) as client:
-                response = client.post(url, json=filter_data or {})
+            async with httpx.AsyncClient(headers=self._get_headers(), timeout=10.0) as client:
+                response = await client.post(url, json=filter_data or {})
                 if response.status_code == 200:
                     return response.json()
                 return {
@@ -51,7 +51,7 @@ class NotionClient:
         except Exception as e:
             return {"error": "INTERNAL_ERROR", "message": str(e)}
 
-    def search(self, query: str) -> Dict[str, Any]:
+    async def search(self, query: str) -> Dict[str, Any]:
         """
         Search for pages or databases.
         
@@ -71,8 +71,70 @@ class NotionClient:
             "page_size": 5
         }
         try:
-            with httpx.Client(headers=self._get_headers(), timeout=10.0) as client:
-                response = client.post(url, json=payload)
+            async with httpx.AsyncClient(headers=self._get_headers(), timeout=10.0) as client:
+                response = await client.post(url, json=payload)
+                if response.status_code == 200:
+                    return response.json()
+                return {
+                    "error": f"HTTP_{response.status_code}",
+                    "message": response.text
+                }
+        except Exception as e:
+            return {"error": "INTERNAL_ERROR", "message": str(e)}
+    async def create_page(self, parent_id: str, properties: Dict[str, Any], children: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+        """
+        Create a new Notion page.
+        
+        Args:
+            parent_id: The ID of the parent page or database.
+            properties: Page properties.
+            children: Optional list of block children.
+            
+        Returns:
+            The API response as a dictionary.
+        """
+        if not self.token:
+            return {"error": "NOTION_TOKEN_MISSING"}
+
+        url = f"{self.base_url}/pages"
+        payload = {
+            "parent": {"page_id": parent_id},
+            "properties": properties,
+        }
+        if children:
+            payload["children"] = children
+
+        try:
+            async with httpx.AsyncClient(headers=self._get_headers(), timeout=10.0) as client:
+                response = await client.post(url, json=payload)
+                if response.status_code == 200:
+                    return response.json()
+                return {
+                    "error": f"HTTP_{response.status_code}",
+                    "message": response.text
+                }
+        except Exception as e:
+            return {"error": "INTERNAL_ERROR", "message": str(e)}
+
+    async def append_block_children(self, block_id: str, children: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Append block children to an existing block/page.
+        
+        Args:
+            block_id: The ID of the block/page to append to.
+            children: List of block children to append.
+            
+        Returns:
+            The API response as a dictionary.
+        """
+        if not self.token:
+            return {"error": "NOTION_TOKEN_MISSING"}
+
+        url = f"{self.base_url}/blocks/{block_id}/children"
+        payload = {"children": children}
+        try:
+            async with httpx.AsyncClient(headers=self._get_headers(), timeout=10.0) as client:
+                response = await client.patch(url, json=payload)
                 if response.status_code == 200:
                     return response.json()
                 return {

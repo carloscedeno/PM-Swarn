@@ -1,7 +1,7 @@
 from typing import Any, Dict, List
 from src.jira.client import JiraClient
 
-def fetch_issues_by_jql(jql: str, client: JiraClient | None = None) -> Dict[str, Any]:
+async def fetch_issues_by_jql(jql: str, client: JiraClient | None = None) -> Dict[str, Any]:
     """
     Fetch issues from Jira using the given JQL, requesting the minimum required fields.
     
@@ -36,7 +36,7 @@ def fetch_issues_by_jql(jql: str, client: JiraClient | None = None) -> Dict[str,
     max_results = 50
     
     while True:
-        response = client.execute_jql(
+        response = await client.execute_jql(
             jql=jql,
             fields=required_fields,
             start_at=start_at,

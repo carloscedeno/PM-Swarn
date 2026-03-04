@@ -247,7 +247,10 @@
         "Each bead includes id, summary, and status parsed from the local store.",
         "The output format matches the internal model used by the Orchestrator."
       ],
-      "passes": false
+      "passes": true,
+      "startTime": "2026-03-04T15:23:03-05:00",
+      "endTime": "2026-03-04T15:25:00-05:00",
+      "durationMinutes": 2.0
     },
     {
       "id": "STORY-016",

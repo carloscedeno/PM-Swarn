@@ -2,8 +2,10 @@ import os
 import json
 import logging
 from typing import List, Dict, Any, Optional
+from datetime import datetime, timezone
 
 from .cli import BeadboxCLI
+from src.model.issue import Issue
 
 logger = logging.getLogger(__name__)
 
@@ -87,3 +89,34 @@ class BeadboxClient:
             except Exception:
                 return None
         return None
+
+class BeadboxSpecialist:
+    """Specialist for interacting with Beadbox to retrieve normalized issues."""
+    
+    def __init__(self, client: BeadboxClient):
+        self.client = client
+        
+    def get_issues(self) -> List[Issue]:
+        """
+        List all beads and normalize them into the Orchestrator's Issue model.
+        """
+        raw_beads = self.client.list_beads()
+        issues = []
+        for bead in raw_beads:
+            bead_id = bead.get("id", "UNKNOWN")
+            
+            # Default to current time if updated is not found
+            updated_str = bead.get("updated") or bead.get("updated_at") or datetime.now(timezone.utc).isoformat()
+            
+            issue = Issue(
+                id=bead_id,
+                key=bead_id,
+                summary=bead.get("summary", "No summary provided"),
+                status=bead.get("status", "STRATA TO DO"),
+                assignee=bead.get("assignee"),
+                updated=updated_str,
+                issuetype="Bead"
+            )
+            issues.append(issue)
+        return issues
+
