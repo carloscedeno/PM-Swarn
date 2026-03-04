@@ -14,4 +14,6 @@ class Issue(BaseModel):
     state_group: Optional[str] = None
     work_type: Optional[str] = None
     stories_json_present: Optional[bool] = None
+    notion_doc_url: Optional[str] = None
+    doc_status: Optional[str] = None
     gaps: List[str] = Field(default_factory=list)

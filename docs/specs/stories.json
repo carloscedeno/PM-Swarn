@@ -76,17 +76,19 @@
       "id": "STORY-005",
       "description": "Search Notion documentation (Product Documentation DB) for each issue key using title and content matching.",
       "files_to_touch": [
-        "src/notion/search_docs.py"
+        "src/notion/search_docs.py",
+        "src/notion/client.py",
+        "src/model/issue.py"
       ],
       "acceptance_criteria": [
         "Given an issue key, the system attempts to find 0 or 1 associated document.",
         "If a document is found, notion_doc_url is a non-empty URL.",
         "If no document is found, notion_doc_url=null and doc_status=missing."
       ],
-      "passes": false,
-      "startTime": null,
-      "endTime": null,
-      "durationMinutes": null
+      "passes": true,
+      "startTime": "2026-03-04T11:30:16-05:00",
+      "endTime": "2026-03-04T11:40:15-05:00",
+      "durationMinutes": 10.0
     },
     {
       "id": "STORY-006",
