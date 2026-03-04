@@ -278,7 +278,10 @@
         "The system can detect if `stories.json` is linked or attached to a bead according to the PRD standard (filename or description section).",
         "If in STRATA DONE and missing evidence, a gap is recorded."
       ],
-      "passes": false
+      "passes": true,
+      "startTime": "2026-03-04T20:41:01.985500+00:00",
+      "endTime": "2026-03-04T20:51:01.985513+00:00",
+      "durationMinutes": 10.0
     },
     {
       "id": "STORY-018",

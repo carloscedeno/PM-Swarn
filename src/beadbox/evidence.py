@@ -9,6 +9,11 @@ def verify_bead_evidence(issue: Issue, raw_bead: Dict[str, Any]):
     Verify if stories.json exists as an attachment/link or in description.
     Updates issue.stories_json_present and issue.gaps.
     """
+    if issue.work_type != "STORIES":
+        return
+        
+    issue.stories_json_present = False
+    
     # 1. Check description for conventional section
     description = raw_bead.get("description", "")
     if "stories.json" in description.lower():
@@ -27,7 +32,7 @@ def verify_bead_evidence(issue: Issue, raw_bead: Dict[str, Any]):
             break
             
     # 3. Apply compliance rules for STRATA DONE
-    if issue.work_type == "STORIES" and issue.status == "STRATA DONE":
+    if issue.status == "STRATA DONE":
         if not issue.stories_json_present:
             if "missing_stories_json" not in issue.gaps:
                 issue.gaps.append("missing_stories_json")
