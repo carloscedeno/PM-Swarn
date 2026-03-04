@@ -67,10 +67,10 @@
         "If work_type=STORIES and no evidence is detected, then stories_json_present=false.",
         "If jira_status=STRATA DONE and stories_json_present=false, the issue includes gap=missing_stories_json."
       ],
-      "passes": false,
-      "startTime": null,
-      "endTime": null,
-      "durationMinutes": null
+      "passes": true,
+      "startTime": "2026-03-04T11:24:48-05:00",
+      "endTime": "2026-03-04T11:34:48-05:00",
+      "durationMinutes": 10.0
     },
     {
       "id": "STORY-005",
