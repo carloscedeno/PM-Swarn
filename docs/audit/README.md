@@ -1,16 +1,7 @@
-# Repository Compliance Audits
+# Audit Reports
 
-This directory contains dated compliance reports for the PM Swarn repository. These reports audit the codebase against the PRD, `stories.json` criteria, and deployment standards.
+This directory contains cumulative compliance audit reports for the repository.
 
-## Audit Workflow
-
-Audits are cumulative and tracked by date. To run a new audit, use the `/audit-repo-compliance` command.
-
-## Reference
-
-- [Strata Dev Framework](docs/PRD%20for%20PM%20Swarn.md)
-- [Project Documentation](README.md)
-
-## Reports History
-
-- [2026-03-04-repo-compliance-audit.md](./2026-03-04-repo-compliance-audit.md) - **100% Alignment**
+- These audits evaluate PRD compliance, Acceptance Criteria, Deployment Requirements, and Tests.
+- See the [Strata Dev Framework The compounding AI Playbook 2](../Strata%20Dev%20Framework%20The%20compounding%20AI%20Playbook%202.md) for more information on the overarching framework and documentation structure.
+- You can run an audit at any time using the `audit-repo-compliance` command / Agent workflow.
