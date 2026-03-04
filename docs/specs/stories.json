@@ -1,5 +1,5 @@
 {
-  "epic": "Weekly SDLC Check (Jira + Notion)",
+  "epic": "Weekly SDLC Check (Beadbox + Notion)",
   "status": "active",
   "stories": [
     {
@@ -117,10 +117,10 @@
         "If jira_status=STRATA DONE and (doc_status!=valid or stories_json_present!=true) then compliance_status=non-compliant.",
         "Each non-compliant issue has a non-empty gaps list (missing_doc, invalid_doc, and/or missing_stories_json)."
       ],
-      "passes": false,
-      "startTime": null,
-      "endTime": null,
-      "durationMinutes": null
+      "passes": true,
+      "startTime": "2026-03-04T11:50:27-05:00",
+      "endTime": "2026-03-04T11:55:00-05:00",
+      "durationMinutes": 4.5
     },
     {
       "id": "STORY-008",
@@ -133,10 +133,10 @@
         "The remediation contains: issue key, gap, failed rule, and a link to the Notion report.",
         "Re-running the check with the same gap does not create duplicates."
       ],
-      "passes": false,
-      "startTime": null,
-      "endTime": null,
-      "durationMinutes": null
+      "passes": true,
+      "startTime": "2026-03-04T12:06:25-05:00",
+      "endTime": "2026-03-04T12:15:00-05:00",
+      "durationMinutes": 8.5
     },
     {
       "id": "STORY-009",
@@ -150,10 +150,142 @@
         "Each listed issue includes a Jira link and (if present) a Notion doc link.",
         "If there are partial errors, the report contains a non-empty 'Errors' section."
       ],
-      "passes": false,
-      "startTime": null,
-      "endTime": null,
-      "durationMinutes": null
+      "passes": true,
+      "startTime": "2026-03-04T12:17:46-05:00",
+      "endTime": "2026-03-04T12:25:00-05:00",
+      "durationMinutes": 7.23
+    },
+    {
+      "id": "STORY-010",
+      "description": "Add `.env.example` with required JIRA/NOTION variables.",
+      "files_to_touch": [
+        ".env.example"
+      ],
+      "acceptance_criteria": [
+        "A `.env.example` file exists in the root directory.",
+        "The file contains placeholders for JIRA_URL, JIRA_USER, JIRA_TOKEN, NOTION_TOKEN, and NOTION_DATABASE_ID."
+      ],
+      "passes": true,
+      "startTime": "2026-03-04T12:29:43-05:00",
+      "endTime": "2026-03-04T12:31:00-05:00",
+      "durationMinutes": 1.28
+    },
+    {
+      "id": "STORY-011",
+      "description": "Add `Dockerfile` for containerization.",
+      "files_to_touch": [
+        "Dockerfile"
+      ],
+      "acceptance_criteria": [
+        "A `Dockerfile` exists in the root directory.",
+        "The Dockerfile correctly sets up the Python environment and installs dependencies.",
+        "The default command runs the application (e.g., `python -m src.main`)."
+      ],
+      "passes": true,
+      "startTime": "2026-03-04T12:31:00-05:00",
+      "endTime": "2026-03-04T12:33:00-05:00",
+      "durationMinutes": 2.0
+    },
+    {
+      "id": "STORY-012",
+      "description": "Update `README.md` to reflect Python project and document dependencies/access.",
+      "files_to_touch": [
+        "README.md"
+      ],
+      "acceptance_criteria": [
+        "README.md identifies the project as a Python tool.",
+        "README.md documents upstream dependencies (Jira, Notion) and access patterns.",
+        "README.md removal of any legacy NestJS template references."
+      ],
+      "passes": true,
+      "startTime": "2026-03-04T12:33:00-05:00",
+      "endTime": "2026-03-04T12:35:00-05:00",
+      "durationMinutes": 2.0
+    },
+    {
+      "id": "STORY-013",
+      "description": "Implement fractal memory files (`agents.md`) in subfolders.",
+      "files_to_touch": [
+        "src/jira/agents.md",
+        "src/notion/agents.md",
+        "src/logic/agents.md"
+      ],
+      "acceptance_criteria": [
+        "An `agents.md` file exists in `src/jira/`, `src/notion/`, and `src/logic/`.",
+        "Each file describes the purpose and specialist capabilities of the agent/module."
+      ],
+      "passes": true,
+      "startTime": "2026-03-04T12:35:00-05:00",
+      "endTime": "2026-03-04T12:38:00-05:00",
+      "durationMinutes": 3.0
+    },
+    {
+      "id": "STORY-014",
+      "description": "Initialize Beadbox workspace (.beads/) and implement a CLI wrapper for 'bd' commands.",
+      "files_to_touch": [
+        "src/beadbox/client.py",
+        "src/beadbox/cli.py"
+      ],
+      "acceptance_criteria": [
+        "The system can detect if a `.beads/` directory exists in the workspace.",
+        "A wrapper exists that can call `bd --version` and `bd ls` (or handle missing CLI gracefully).",
+        "If `bd` is missing, the client can fall back to direct filesystem reading of `.beads/registry.json`."
+      ],
+      "passes": true,
+      "startTime": "2026-03-04T15:12:00-05:00",
+      "endTime": "2026-03-04T15:17:00-05:00",
+      "durationMinutes": 5.0
+    },
+    {
+      "id": "STORY-015",
+      "description": "Implement Beadbox Specialist to list beads and extract core fields (status, assignee, summary).",
+      "files_to_touch": [
+        "src/beadbox/client.py"
+      ],
+      "acceptance_criteria": [
+        "The Specialist returns a list of beads from the workspace.",
+        "Each bead includes id, summary, and status parsed from the local store.",
+        "The output format matches the internal model used by the Orchestrator."
+      ],
+      "passes": false
+    },
+    {
+      "id": "STORY-016",
+      "description": "Update Work Type Detection and State Grouping for Beadbox workflow states.",
+      "files_to_touch": [
+        "src/logic/work_type_detection.py",
+        "src/logic/state_grouping.py"
+      ],
+      "acceptance_criteria": [
+        "PRD_STATES and STORIES_STATES are updated to include all Beadbox-specific statuses (e.g., STRATA STORIES.JSON CREATION).",
+        "classify_state_group correctly maps Beadbox statuses to queue/wip/blocked/done."
+      ],
+      "passes": false
+    },
+    {
+      "id": "STORY-017",
+      "description": "Implement Beadbox-compliant evidence verification for stories.json.",
+      "files_to_touch": [
+        "src/beadbox/evidence.py"
+      ],
+      "acceptance_criteria": [
+        "The system can detect if `stories.json` is linked or attached to a bead according to the PRD standard (filename or description section).",
+        "If in STRATA DONE and missing evidence, a gap is recorded."
+      ],
+      "passes": false
+    },
+    {
+      "id": "STORY-018",
+      "description": "Refactor Orchestrator to use Beadbox Specialist instead of Jira and update main execution flow.",
+      "files_to_touch": [
+        "src/main.py"
+      ],
+      "acceptance_criteria": [
+        "JiraClient imports are replaced with BeadboxClient.",
+        "The main audit loop correctly fetches from Beadbox and processes beads.",
+        "Environment variables are transitioned to BEADBOX_WORKSPACE_PATH."
+      ],
+      "passes": false
     }
   ]
 }
