@@ -1,0 +1,24 @@
+[project]
+name = "pm-swarn"
+version = "0.1.0"
+description = "PM Swarn - Weekly SDLC Check"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx",
+    "pydantic",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-mock",
+    "respx",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+

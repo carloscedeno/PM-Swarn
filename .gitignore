@@ -1,0 +1,57 @@
+# AI and IDE
+.antigravity/
+.gemini/
+.agent/
+.cagent/
+.claude/
+.cline/
+.cursor/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Environments
+.venv/
+venv/
+node_modules/
+.env*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Coverage
+.coverage
+htmlcov/
+
+# Logs
+logs/
+*.log
+error.txt
+mypy_out.txt
+pytest_out.txt

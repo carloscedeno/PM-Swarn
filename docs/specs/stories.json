@@ -1,0 +1,157 @@
+{
+  "epic": "Weekly SDLC Check (Jira + Notion)",
+  "status": "active",
+  "stories": [
+    {
+      "id": "STORY-001",
+      "description": "Execute configurable JQL and return a list of issues with the minimum fields required for auditing.",
+      "files_to_touch": [
+        "src/jira/client.py",
+        "src/jira/jql.py"
+      ],
+      "acceptance_criteria": [
+        "Given a valid JQL, the system returns a list of issues (may be empty) without errors.",
+        "Each issue includes key, summary, status, assignee, updated, issuetype, and parent (if present).",
+        "If Jira returns an error/timeout, the output includes non-empty error_code and error_message."
+      ],
+      "passes": true,
+      "startTime": "2026-03-04T09:34:00.000Z",
+      "endTime": "2026-03-04T10:04:00.000Z",
+      "durationMinutes": 30.0
+    },
+    {
+      "id": "STORY-002",
+      "description": "Normalize Jira issues into an internal model and classify state_group (queue/wip/blocked/done) based on Jira status.",
+      "files_to_touch": [
+        "src/model/issue.py",
+        "src/logic/state_grouping.py"
+      ],
+      "acceptance_criteria": [
+        "If status is STRATA TO DO then state_group=queue.",
+        "If status is STRATA BLOCKED then state_group=blocked.",
+        "If status is STRATA DONE then state_group=done.",
+        "If status is one of STRATA IN PROGRESS, STRATA IN TESTING, STRATA TO DEPLOYMENT, STRATA IN INTEGRATION then state_group=wip.",
+        "For an unknown status, state_group=unknown and a warning is recorded in the output."
+      ],
+      "passes": true,
+      "startTime": "2026-03-04T10:40:00.000Z",
+      "endTime": "2026-03-04T10:55:00.000Z",
+      "durationMinutes": 15.0
+    },
+    {
+      "id": "STORY-003",
+      "description": "Detect the issue work_type (PRD vs STORIES) so the correct evidence rules are applied.",
+      "files_to_touch": [
+        "src/logic/work_type_detection.py",
+        "src/model/issue.py",
+        "src/logic/state_grouping.py"
+      ],
+      "acceptance_criteria": [
+        "For an issue in the Stories workflow states, work_type=STORIES.",
+        "For an issue in the PRD workflow states, work_type=PRD.",
+        "If it cannot be inferred, work_type=unknown and the report lists it as a finding."
+      ],
+      "passes": true,
+      "startTime": "2026-03-04T10:58:00.000Z",
+      "endTime": "2026-03-04T11:03:00.000Z",
+      "durationMinutes": 5.0
+    },
+    {
+      "id": "STORY-004",
+      "description": "Verify `stories.json` evidence in Jira for issues with work_type=STORIES.",
+      "files_to_touch": [
+        "src/jira/evidence.py"
+      ],
+      "acceptance_criteria": [
+        "If work_type=STORIES and the issue has an attachment or link whose name contains 'stories.json', then stories_json_present=true.",
+        "If work_type=STORIES and no evidence is detected, then stories_json_present=false.",
+        "If jira_status=STRATA DONE and stories_json_present=false, the issue includes gap=missing_stories_json."
+      ],
+      "passes": false,
+      "startTime": null,
+      "endTime": null,
+      "durationMinutes": null
+    },
+    {
+      "id": "STORY-005",
+      "description": "Search Notion documentation (Product Documentation DB) for each issue key using title and content matching.",
+      "files_to_touch": [
+        "src/notion/search_docs.py"
+      ],
+      "acceptance_criteria": [
+        "Given an issue key, the system attempts to find 0 or 1 associated document.",
+        "If a document is found, notion_doc_url is a non-empty URL.",
+        "If no document is found, notion_doc_url=null and doc_status=missing."
+      ],
+      "passes": false,
+      "startTime": null,
+      "endTime": null,
+      "durationMinutes": null
+    },
+    {
+      "id": "STORY-006",
+      "description": "Validate minimum quality of the matched Notion document (required sections + explicit issue key reference).",
+      "files_to_touch": [
+        "src/notion/doc_validator.py"
+      ],
+      "acceptance_criteria": [
+        "If notion_doc_url=null then doc_status=missing.",
+        "If notion_doc_url!=null and content includes all 4 required sections, doc_status=valid.",
+        "If notion_doc_url!=null and at least 1 required section is missing, doc_status=invalid and the system lists missing sections."
+      ],
+      "passes": false,
+      "startTime": null,
+      "endTime": null,
+      "durationMinutes": null
+    },
+    {
+      "id": "STORY-007",
+      "description": "Compute compliance for STRATA DONE (valid Notion doc + `stories.json` present) and generate a gaps list per issue.",
+      "files_to_touch": [
+        "src/logic/compliance.py"
+      ],
+      "acceptance_criteria": [
+        "If jira_status=STRATA DONE and doc_status=valid and stories_json_present=true then compliance_status=compliant.",
+        "If jira_status=STRATA DONE and (doc_status!=valid or stories_json_present!=true) then compliance_status=non-compliant.",
+        "Each non-compliant issue has a non-empty gaps list (missing_doc, invalid_doc, and/or missing_stories_json)."
+      ],
+      "passes": false,
+      "startTime": null,
+      "endTime": null,
+      "durationMinutes": null
+    },
+    {
+      "id": "STORY-008",
+      "description": "Create an idempotent Jira remediation action (comment or sub-task) for each detected gap.",
+      "files_to_touch": [
+        "src/jira/remediation.py"
+      ],
+      "acceptance_criteria": [
+        "For an issue with a gap, the system creates exactly 1 remediation action per gap type if it does not already exist.",
+        "The remediation contains: issue key, gap, failed rule, and a link to the Notion report.",
+        "Re-running the check with the same gap does not create duplicates."
+      ],
+      "passes": false,
+      "startTime": null,
+      "endTime": null,
+      "durationMinutes": null
+    },
+    {
+      "id": "STORY-009",
+      "description": "Generate a Notion report page with run_id, KPIs, findings, and per-issue links.",
+      "files_to_touch": [
+        "src/notion/report_writer.py"
+      ],
+      "acceptance_criteria": [
+        "A report is created/updated with a non-empty run_id and a timestamp.",
+        "The report includes KPIs: total, done, wip, blocked, queue, missing_doc, invalid_doc, missing_stories_json.",
+        "Each listed issue includes a Jira link and (if present) a Notion doc link.",
+        "If there are partial errors, the report contains a non-empty 'Errors' section."
+      ],
+      "passes": false,
+      "startTime": null,
+      "endTime": null,
+      "durationMinutes": null
+    }
+  ]
+}
